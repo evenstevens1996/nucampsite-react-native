@@ -6,8 +6,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
 import { baseUrl } from '../shared/baseUrl';
 import logo from '../assets/images/logo.png';
+import * as ImageManipulator from 'expo-image-manipulator';
+import * as MediaLibrary from 'expo-media-library';
 
-const LoginTab = ({ navigation }) => {
+const LoginTab = ({navigation}) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [remember, setRemember] = useState(false);
@@ -44,17 +46,17 @@ const LoginTab = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Input
+            <Input 
                 placeholder='Username'
-                leftIcon={{ type: 'font-awesome', name: 'user-o' }}
+                leftIcon={{type: 'font-awesome', name: 'user-o'}}
                 onChangeText={(text) => setUsername(text)}
                 value={username}
                 containerStyle={styles.formInput}
                 leftIconContainerStyle={styles.formIcon}
             />
-            <Input
+            <Input 
                 placeholder='Password'
-                leftIcon={{ type: 'font-awesome', name: 'key' }}
+                leftIcon={{type: 'font-awesome', name: 'key'}}
                 onChangeText={(text) => setPassword(text)}
                 value={password}
                 containerStyle={styles.formInput}
@@ -77,11 +79,11 @@ const LoginTab = ({ navigation }) => {
                             name='sign-in'
                             type='font-awesome'
                             color='#fff'
-                            iconStyle={{ marginRight: 10 }}
+                            iconStyle={{marginRight: 10}}
                         />
                     }
-                    buttonStyle={{ backgroundColor: '#5637DD' }}
-                />
+                    buttonStyle={{backgroundColor: '#5637DD'}}
+                />    
             </View>
             <View style={styles.formButton}>
                 <Button
@@ -93,49 +95,49 @@ const LoginTab = ({ navigation }) => {
                             name='user-plus'
                             type='font-awesome'
                             color='blue'
-                            iconStyle={{ marginRight: 10 }}
+                            iconStyle={{marginRight: 10}}
                         />
                     }
-                    titleStyle={{ color: 'blue' }}
-                />
-            </View>
+                   titleStyle={{color: 'blue'}}
+                />    
+            </View>    
         </View>
     );
 };
 
-const RegisterTab = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [firstName, setFirstName] = useState('');
-    const [lastName, setLastName] = useState('');
-    const [email, setEmail] = useState('');
-    const [remember, setRemember] = useState(false);
-    const [imageUrl, setImageUrl] = useState(baseUrl + 'images/logo.png');
+    const RegisterTab = () => {
+        const [username, setUsername] = useState('');
+        const [password, setPassword] = useState('');
+        const [firstName, setFirstName] = useState('');
+        const [lastName, setLastName] = useState('');
+        const [email, setEmail] = useState('');
+        const [remember, setRemember] = useState(false);
+        const [imageUrl, setImageUrl] = useState(baseUrl + 'images/logo.png');
 
-    const handleRegister = () => {
-        const userInfo = {
-            username,
-            password,
-            firstName,
-            lastName,
-            email,
-            remember
-        };
-        console.log(JSON.stringify(userInfo));
-        if (remember) {
-            SecureStore.setItemAsync(
-                'userinfo',
-                JSON.stringify({
+            const handleRegister = () => {
+                const userInfo = {
                     username,
-                    password
-                })
-            ).catch((error) => console.log('Could not save user info', error));
-        } else {
-            SecureStore.deleteItemAsync('userinfo').catch((error) =>
-                console.log('Could not delete user info', error)
-            );
-        }
-    };
+                    password,
+                    firstName,
+                    lastName,
+                    email,
+                    remember
+                };
+                console.log(JSON.stringify(userInfo));
+                if (remember) {
+                    SecureStore.setItemAsync(
+                        'userinfo',
+                        JSON.stringify({
+                            username,
+                            password
+                        })
+                    ).catch((error) => console.log('Could not save user info', error));
+                } else {
+                    SecureStore.deleteItemAsync('userinfo').catch((error) =>
+                        console.log('Could not delete user info', error)
+                    );
+                }
+            };
 
     const getImageFromCamera = async () => {
         const cameraPermission =
@@ -148,7 +150,39 @@ const RegisterTab = () => {
             });
             if (!capturedImage.cancelled) {
                 console.log(capturedImage);
-                setImageUrl(capturedImage.uri);
+                processImage(capturedImage.uri);
+            }
+        }
+    };
+
+    const processImage = async (imgUri) => {
+        const processedImage = await ImageManipulator.manipulateAsync(
+            imgUri,
+            [{
+                resize: {
+                    height:400,
+                    width: 400
+                }
+            }],
+            { format: ImageManipulator.SaveFormat.PNG }
+        );
+
+        console.log(processedImage);
+        MediaLibrary.saveToLibraryAsync(processedImage.uri);
+        setImageUrl(processedImage.uri);
+    };
+
+    const getImageFromGallery = async () => {
+        const medLibraryPermissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (medLibraryPermissions.status === 'granted') {
+            const capturedImage = await ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                aspect: [1, 1]
+            });
+            if (!capturedImage.cancelled) {
+                console.log(capturedImage);
+                processImage(capturedImage.uri);
             }
         }
     };
@@ -158,47 +192,48 @@ const RegisterTab = () => {
             <View style={styles.container}>
                 <View style={styles.imageContainer}>
                     <Image
-                        source={{ uri: imageUrl }}
+                        source={{uri: imageUrl}}
                         loadingIndicatorSource={logo}
                         style={styles.image}
                     />
                     <Button title='Camera' onPress={getImageFromCamera} />
+                    <Button title='Gallery' onPress={getImageFromGallery} />    
                 </View>
-                <Input
+                <Input 
                     placeholder='Username'
-                    leftIcon={{ type: 'font-awesome', name: 'user-o' }}
+                    leftIcon={{type: 'font-awesome', name: 'user-o'}}
                     onChangeText={(text) => setUsername(text)}
                     value={username}
                     containerStyle={styles.formInput}
                     leftIconContainerStyle={styles.formIcon}
                 />
-                <Input
+                <Input 
                     placeholder='Password'
-                    leftIcon={{ type: 'font-awesome', name: 'key' }}
+                    leftIcon={{type: 'font-awesome', name: 'key'}}
                     onChangeText={(text) => setPassword(text)}
                     value={password}
                     containerStyle={styles.formInput}
                     leftIconContainerStyle={styles.formIcon}
                 />
-                <Input
+                <Input 
                     placeholder='First Name'
-                    leftIcon={{ type: 'font-awesome', name: 'user-o' }}
+                    leftIcon={{type: 'font-awesome', name: 'user-o'}}
                     onChangeText={(text) => setFirstName(text)}
                     value={firstName}
                     containerStyle={styles.formInput}
                     leftIconContainerStyle={styles.formIcon}
                 />
-                <Input
+                <Input 
                     placeholder='Last Name'
-                    leftIcon={{ type: 'font-awesome', name: 'user-o' }}
+                    leftIcon={{type: 'font-awesome', name: 'user-o'}}
                     onChangeText={(text) => setLastName(text)}
                     value={lastName}
                     containerStyle={styles.formInput}
                     leftIconContainerStyle={styles.formIcon}
                 />
-                <Input
+                <Input 
                     placeholder='Email'
-                    leftIcon={{ type: 'font-awesome', name: 'envelope-o' }}
+                    leftIcon={{type: 'font-awesome', name: 'envelope-o'}}
                     onChangeText={(text) => setEmail(text)}
                     value={email}
                     containerStyle={styles.formInput}
@@ -221,27 +256,28 @@ const RegisterTab = () => {
                                 name='user-plus'
                                 type='font-awesome'
                                 color='#fff'
-                                iconStyle={{ marginRight: 10 }}
+                                iconStyle={{marginRight: 10}}
                             />
                         }
-                        buttonStyle={{ backgroundColor: '#5637DD' }}
-                    />
+                        buttonStyle={{backgroundColor: '#5637DD'}}
+                    />    
                 </View>
+
             </View>
         </ScrollView>
-    );
+    )
 };
 
-const Tab = createBottomTabNavigator();
+    const Tab = createBottomTabNavigator();
 
-const LoginScreen = () => {
-    const tabBarOptions = {
-        activeBackgroundColor: '#5637DD',
-        inactiveBackgroundColor: '#CEC8FF',
-        activeTintColor: '#fff',
-        inactiveTintColor: '#808080',
-        labelStyle: { fontSize: 16 }
-    };
+    const LoginScreen = () => {
+        const tabBarOptions = {
+            activeBackgroundColor: '#5637DD',
+            inactiveBackgroundColor: '#CEC8FF',
+            activeTintColor: '#fff',
+            inactiveTintColor: '#808080',
+            labelStyle: {fontSize: 16}
+        };
 
     return (
         <Tab.Navigator tabBarOptions={tabBarOptions}>
@@ -251,38 +287,38 @@ const LoginScreen = () => {
                 options={{
                     tabBarIcon: (props) => {
                         return (
-                            <Icon
+                            <Icon 
                                 name='sign-in'
                                 type='font-awesome'
                                 color={props.color}
                             />
-                        );
+                        )
                     }
                 }}
             />
             <Tab.Screen
-                name='Register'
-                component={RegisterTab}
-                options={{
-                    tabBarIcon: (props) => {
-                        return (
-                            <Icon
-                                name='user-plus'
-                                type='font-awesome'
-                                color={props.color}
-                            />
-                        );
-                    }
-                }}
-            />
+            name='Register'
+            component={RegisterTab}
+            options={{
+                tabBarIcon: (props) => {
+                    return (
+                        <Icon 
+                            name='sign-in'
+                            type='font-awesome'
+                            color={props.color}
+                        />
+                    )
+                }
+            }}
+        />
         </Tab.Navigator>
-    );
-};
+    )
+}
 
 const styles = StyleSheet.create({
     container: {
         justifyContent: 'center',
-        margin: 10
+        margin: 10    
     },
     formIcon: {
         marginRight: 10
